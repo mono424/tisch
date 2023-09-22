@@ -41,8 +41,8 @@ export default function Home() {
         <HeightDisplay value={height} />
       </div>
       <Controls
-        onUp={() => client.send("control", { payload: "up" })}
-        onDown={() => client.send("control", { payload: "down" })}
+        onUp={() => client.send("/control", { payload: "up" })}
+        onDown={() => client.send("/control", { payload: "down" })}
       />
     </main>
   )
