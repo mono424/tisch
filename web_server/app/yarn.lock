@@ -1316,6 +1316,11 @@ globby@^11.1.0:
     merge2 "^1.4.1"
     slash "^3.0.0"
 
+go-pts-client@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/go-pts-client/-/go-pts-client-0.0.7.tgz#037a1846401922eb9cbd1a13fb53455ec023ed8a"
+  integrity sha512-F7foI6fn7OmJ6Sb8I/gfz7Yey9S0zL17NiNlIMuzj4MLuKOczCbmYPVOxqFnAp/6Qn17SjTtV8rYLPM0TPNKPA==
+
 gopd@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/gopd/-/gopd-1.0.1.tgz#29ff76de69dac7489b7c0918a5788e56477c332c"
