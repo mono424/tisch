@@ -12,11 +12,11 @@ export default function Home() {
 
   useEffect(() => {
     if (client) {
-      client.subscribeChannel('control', (data: any) => setHeight(data.height));
+      client.subscribeChannel('/control', (data: any) => setHeight(data.height));
     }
 
     return () => {
-      client?.unsubscribeChannel('control', {});
+      client?.unsubscribeChannel('/control', {});
       client?.close();
     }
   }, [client]);
