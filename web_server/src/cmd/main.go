@@ -6,10 +6,14 @@ import (
 	"github.com/mono424/go-pts"
 	ptsc_gorilla "github.com/mono424/go-pts-gorilla-connector"
 	"github.com/tarm/serial"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os/exec"
 )
+
+var appPath = "/Users/khadim/dev/tisch/web_server/app"
 
 var config = serial.Config{
 	Name: "/dev/ttyS0",
@@ -46,6 +50,14 @@ func main() {
 		}
 	})
 	r.NoRoute(ReverseProxy)
+
+	go func() {
+		cmd := exec.Command("yarn", "dev")
+		cmd.Dir = appPath
+		if err := cmd.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	r.Run()
 }
