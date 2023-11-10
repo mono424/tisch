@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/mono424/go-pts"
 	ptsc_gorilla "github.com/mono424/go-pts-gorilla-connector"
+	motor_controller "github.com/mono424/tisch/web_server/src/motor-controller"
 	"github.com/tarm/serial"
 	"log"
 	"net/http"
@@ -15,13 +17,16 @@ import (
 
 var appPath = "/Users/khadim/dev/tisch/web_server/app"
 
-var config = serial.Config{
+var config = &serial.Config{
 	Name: "/dev/ttyS0",
 	Baud: 9600,
 }
 
 func main() {
 	r := gin.Default()
+
+	controller := motor_controller.New(config)
+
 	tubeSystem := pts.New(ptsc_gorilla.NewConnector(
 		websocket.Upgrader{},
 		func(err *pts.Error) {
@@ -29,12 +34,19 @@ func main() {
 		},
 	))
 
-	tubeSystem.RegisterChannel("/control", pts.ChannelHandlers{
+	controlChannel := tubeSystem.RegisterChannel("/control", pts.ChannelHandlers{
 		OnSubscribe: func(s *pts.Context) {
 			println("Client joined: " + s.FullPath)
 		},
 		OnMessage: func(s *pts.Context, message *pts.Message) {
 			println("New Message on " + s.FullPath + ": " + string(message.Payload))
+
+			switch string(message.Payload) {
+			case "up":
+				controller.SetPosition(motor_controller.UP_HEIGHT)
+			case "down":
+				controller.SetPosition(motor_controller.DOWN_HEIGHT)
+			}
 		},
 		OnUnsubscribe: func(s *pts.Context) {
 			println("Client left: " + s.FullPath)
@@ -49,7 +61,23 @@ func main() {
 			println("Something went wrong while handling a Socket request")
 		}
 	})
+
 	r.NoRoute(ReverseProxy)
+
+	go func() {
+		for {
+			msg := <-controller.InChannel()
+			println("MotorController: ", msg.Type, msg.Value)
+			switch msg.Type {
+			case motor_controller.TypeGetHeightResponse:
+				payload := gin.H{
+					"height": msg.Value,
+				}
+				bytes, _ := json.Marshal(payload)
+				controlChannel.Broadcast("/control", bytes, nil)
+			}
+		}
+	}()
 
 	go func() {
 		cmd := exec.Command("yarn", "dev")

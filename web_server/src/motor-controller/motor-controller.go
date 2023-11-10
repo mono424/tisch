@@ -1,4 +1,4 @@
-package main
+package motor_controller
 
 import (
 	"github.com/tarm/serial"
@@ -88,29 +88,33 @@ func New(config *serial.Config) *MotorController {
 		log.Fatal(err)
 	}
 
-	var outgoing chan Message = make(chan Message)
-	var incoming chan Message = make(chan Message)
+	var outgoing = make(chan Message)
+	var incoming = make(chan Message)
 	go sender(outgoing, s)
 	go receiver(incoming, s)
 
 	return &MotorController{out: outgoing, in: incoming}
 }
 
-func (m *MotorController) togglePosition() {
+func (m *MotorController) InChannel() chan Message {
+	return m.in
+}
+
+func (m *MotorController) TogglePosition() {
 	time.Sleep(2000 * time.Millisecond)
 	m.out <- Message{Type: TypeGetHeightRequest}
 	heightRaw := <-m.in
 	height := int(heightRaw.Value)
 	if height >= 100 {
-		m.setPosition(DOWN_HEIGHT)
+		m.SetPosition(DOWN_HEIGHT)
 	} else if height < 100 && height >= 1 {
-		m.setPosition(UP_HEIGHT)
+		m.SetPosition(UP_HEIGHT)
 	}
 }
 
-func (m *MotorController) setPosition(position int) {
+func (m *MotorController) SetPosition(position int) {
 	log.Println("Setting desk to", position, "percent height")
 	height := heightPercentageToCentimeters(position)
 	log.Println("This corresponds to", height, "cm height")
-	m.out <- Message{Type: MessageType(TypeSetHeightRequest), Value: byte(height)}
+	m.out <- Message{Type: TypeSetHeightRequest, Value: byte(height)}
 }
